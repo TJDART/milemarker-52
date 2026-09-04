@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#facc15">
+<title>MileMarker 52 - First Trip Free</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,system-ui;background:#000;color:#fff;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+#top{padding:6px;background:#0f1115;display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid #222}
+input{flex:1;min-width:60px;padding:9px;border-radius:11px;border:1px solid #222;background:#000;color:#fff;font-size:11px}
+.btn{padding:8px 10px;border-radius:11px;border:0;font-weight:900;font-size:9px;cursor:pointer}
+.btn-go{background:linear-gradient(90deg,#facc15,#ff7eb5);color:#000}.btn-pill{background:#181a20;color:#fff;border:1px solid #222}
+.btn-toll{background:#facc15;color:#000}.btn-toll.active{background:#ef4444;color:#fff}
+#alertBar{padding:11px;display:none;align-items:center;gap:10px;font-weight:900;border-bottom:3px solid #000;font-size:11px}
+#routeBar{padding:6px;background:#0f1115;display:none;gap:6px;overflow:auto;white-space:nowrap;border-bottom:1px solid #222}
+.routeOpt{padding:6px 10px;border-radius:99px;border:2px solid #222;background:#181a20;color:#fff;font-size:10px;font-weight:800;display:inline-block;cursor:pointer}
+.routeOpt.active{background:#facc15;color:#000}
+#status{padding:7px 10px;background:#181a20;display:flex;justify-content:space-between;align-items:center}
+#speedSign{width:56px;height:56px;background:#fff;border:5px solid #c00;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#000;font-weight:900}
+#map{flex:1;border-radius:14px;margin:4px;overflow:hidden;border:2px solid #222}
+#splash{position:fixed;inset:0;background:radial-gradient(circle at 50% 10%,#1a0a1a,#000 75%);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;text-align:center;overflow:auto;color:#fff}
+.vehicleCard{width:100%;max-width:400px;background:#111;border:2px solid #333;border-radius:12px;padding:12px;margin:6px 0;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.vehicleCard.active{border-color:#facc15;background:#1a1a00;box-shadow:0 0 15px rgba(250,204,21,0.3)}
+#panel{position:fixed;bottom:0;left:0;right:0;background:#0f1115;border-top:3px solid #facc15;border-radius:20px 20px 0 0;z-index:600;max-height:92vh;overflow:auto;display:none;padding:14px}
+.card{background:#000;border:1px solid #222;border-radius:12px;padding:10px;margin:6px 0;display:flex;justify-content:space-between;align-items:center}
+</style>
+</head>
+<body>
+<div id="splash">
+<div style="width:100%;max-width:400px">
+<div style="background:#22c55e;color:#000;padding:6px 12px;border-radius:99px;font-weight:900;font-size:12px;display:inline-block;margin-bottom:10px">✅ FIRST TRIP FREE • No Credit Card Needed</div>
+<div style="font-size:60px">🦋</div>
+<div style="display:inline-block;background:linear-gradient(90deg,#facc15,#ffde59);color:#000;font-weight:900;font-size:28px;padding:6px 20px;border-radius:12px;border:3px solid #000;margin:6px 0">52</div>
+<h1 style="font-size:32px;font-weight:900">MileMarker 52</h1>
+<div style="font-size:10px;color:#facc15;margin-bottom:12px">By TJ Collins • Sevierville TN 37862 • Tolls Avoid • Live Fuel • Walmart Ban Check • KOA • Low Bridges</div>
+
+<div class="vehicleCard" data-vehicle="car" onclick="selectVehicle('car')" style="border-color:#3b82f6"><div style="display:flex;align-items:center;gap:10px"><div>🚗</div><div><div style="font-weight:800">Car</div><div style="font-size:10px;color:#3b82f6">$4.99 One-Time - Parks, rest, tolls avoid, fuel</div></div></div><div style="width:20px;height:20px;border-radius:50%;border:2px solid #3b82f6"></div></div>
+<div class="vehicleCard" data-vehicle="rv" onclick="selectVehicle('rv')" style="border-color:#f97316"><div style="display:flex;align-items:center;gap:10px"><div>🚐</div><div><div style="font-weight:800">RV / Trailer</div><div style="font-size:10px;color:#f97316">$6.99/mo - KOA, dump, Walmart BAN check (Pigeon Forge BANS!)</div></div></div><div style="width:20px;height:20px;border-radius:50%;border:2px solid #f97316"></div></div>
+<div class="vehicleCard active" data-vehicle="eighteen" onclick="selectVehicle('eighteen')" style="border-color:#facc15"><div style="display:flex;align-items:center;gap:10px"><div>🚛</div><div><div style="font-weight:800">Trucker Pro <span style="background:#facc15;color:#000;padding:2px 6px;border-radius:99px;font-size:8px">MOST POPULAR</span></div><div style="font-size:10px;color:#facc15">$9.99/mo - Tolls 3x-5x $100+, low bridges, weigh, DEF</div></div></div><div style="width:20px;height:20px;border-radius:50%;border:2px solid #facc15;background:#facc15"></div></div>
+
+<div id="payWall" style="margin-top:12px">
+<button class="btn-go" id="trialBtn" style="width:100%;padding:16px;font-size:16px;background:#22c55e;color:#000;border-radius:12px;font-weight:900" onclick="startFreeTrial()">START FIRST TRIP FREE →</button>
+<div style="display:flex;gap:8px;margin-top:10px">
+<button class="btn" style="flex:1;background:#635bff;color:#fff;padding:12px;border-radius:10px" onclick="goPay('stripe')">💳 Stripe</button>
+<button class="btn" style="flex:1;background:#ffc439;color:#000;padding:12px;border-radius:10px" onclick="goPay('paypal')">🅿️ PayPal</button>
+</div>
+<div style="font-size:9px;opacity:0.6;margin-top:6px;text-align:center">After free trip: Car $4.99 one-time • RV $6.99/mo • Trucker $9.99/mo<br>🔧 TJ: Replace STRIPE_LINKS / PAYPAL_LINKS or hide them for Play-distributed builds</div>
+</div>
+<button class="btn-go" id="startBtn" style="width:100%;padding:16px;margin-top:10px;display:none" onclick="startApp()">🦋 ▶ START APP - FREE TRIP ACTIVE</button>
+</div>
+</div>
+
+<div id="top">
+<input id="from" placeholder="From: Sevierville TN" value="Sevierville TN"><input id="to" placeholder="To: Pigeon Forge" value="Pigeon Forge TN">
+<button class="btn btn-go" onclick="startTrip()">GO</button>
+<button class="btn btn-toll" id="tollBtn" onclick="toggleTolls()">💰 TOLLS</button>
+<button class="btn btn-pill" onclick="findTollRoads()">FIND TOLLS</button>
+<button class="btn btn-pill" onclick="findFuelLive()">⛽ FUEL</button>
+<button class="btn btn-pill" id="walmartBtn" onclick="findWalmartOvernight()">🅿️ WALMART</button>
+<button class="btn btn-pill" id="campBtn" onclick="findCampgrounds()">🏕️ KOA</button>
+<button class="btn btn-pill" id="funBtn" onclick="findParks()">🏞️ FUN</button>
+<button class="btn btn-pill" onclick="openPanel()">⚙️</button>
+</div>
+<div id="alertBar"><span id="alertIcon">💰</span><span id="alertText">READY</span><span style="margin-left:auto;background:#000;color:#fff;padding:4px 10px;border-radius:99px;font-size:10px" id="alertDist">--</span></div>
+<div id="routeBar"></div>
+<div id="status"><div style="display:flex;align-items:center;gap:8px"><div id="speedSign"><span style="font-size:7px">SPEED</span><span style="font-size:22px;line-height:1" id="speedNum">--</span><span style="font-size:7px">LIMIT</span></div><div><div id="roadName" style="font-weight:800;font-size:11px">MileMarker 52 v32 Single File</div><div id="nextMan" style="font-size:10px;opacity:0.7">First Trip Free Active</div></div></div><div style="text-align:right"><div id="miles" style="font-weight:900">0.0 mi</div><div id="vehicleInfo" style="font-size:9px;color:#facc15">--</div></div></div>
+<div id="map"></div>
+
+<div id="panel">
+<div style="display:flex;justify-content:space-between"><h3>MileMarker 52 v32 - All Features</h3><button class="btn btn-pill" onclick="closePanel()">✕</button></div>
+<div style="text-align:center;padding:10px;background:#111;border-radius:10px;margin:10px 0;border:1px solid #facc15">🦋 MileMarker 52 🦋<br><span style="font-size:11px">TJ Collins • Sevierville TN 37862<br>✅ FIRST TRIP FREE - No Card<br>Car $4.99 one-time • RV $6.99/mo • Trucker $9.99/mo<br>✅ Tolls Avoid + Cost • Live Fuel • Walmart Town Ban • KOA • Parks • Low Bridges • Weigh • Rest Areas • Stripe + PayPal</span></div>
+<div id="tollList" style="background:#000;padding:8px;border-radius:8px;max-height:120px;overflow:auto">Tolls: Tap FIND TOLLS</div>
+<div id="fuelList" style="background:#000;padding:8px;border-radius:8px;max-height:80px;overflow:auto;margin-top:6px">Fuel: Tap ⛽ FUEL</div>
+<div id="walmartList" style="background:#000;padding:8px;border-radius:8px;max-height:120px;overflow:auto;margin-top:6px">Walmart: Tap 🅿️ WALMART - Shows Sevierville ALLOW vs Pigeon Forge BAN</div>
+<div id="campList" style="background:#000;padding:8px;border-radius:8px;max-height:100px;overflow:auto;margin-top:6px">Camp/Parks: Tap 🏕️ KOA or 🏞️ FUN</div>
+</div>
+
+<script>
+// Replace with your deployed registerTrial function URL after you deploy backend
+const REGISTER_TRIAL_URL = 'https://us-central1-YOUR_PROJECT.cloudfunctions.net/registerTrial';
+const PACKAGE_NAME = 'com.tjcollins.milemarker52';
+const PRODUCT_ID_MAP = { car: 'com.tjcollins.milemarker52.car_onetime', rv: 'com.tjcollins.milemarker52.rv_monthly', eighteen: 'com.tjcollins.milemarker52.trucker_monthly' };
+
+const STRIPE_LINKS={car:'https://buy.stripe.com/YOUR_CAR_499_LINK',rv:'https://buy.stripe.com/YOUR_RV_699_LINK',pickup_trailer:'https://buy.stripe.com/YOUR_RV_699_LINK',eighteen:'https://buy.stripe.com/YOUR_TRUCK_999_LINK'};
+const PAYPAL_LINKS={car:'https://www.paypal.com/ncp/payment/YOUR_CAR_499',rv:'https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=YOUR_RV_699',pickup_trailer:'https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=YOUR_RV_699',eighteen:'https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=YOUR_TRUCK_999'};
+let map=L.map('map',{zoomControl:false,attributionControl:false}).setView([35.865,-83.561],12);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+let routeLines=[], markers=[], vehicleType=localStorage.getItem('mm_vehicle')||'eighteen', avoidTolls=localStorage.getItem('mm_avoid_tolls')==='true';
+let paidTiers=JSON.parse(localStorage.getItem('mm_paid')||'{}');
+const townBanDB={'pigeon forge':{ban:true,note:'Pigeon Forge BANS - Use campground'},'gatlinburg':{ban:true,note:'Gatlinburg BANS'},'myrtle beach':{ban:true,note:'Myrtle Beach BANS'},'sevierville':{ban:false,note:'Sevierville ALLOWS - Call manager'}};
+function checkTownBan(city){ if(!city) return {ban:false,unknown:true,note:'Unknown'}; let cl=city.toLowerCase(); for(let k in townBanDB){ if(cl.includes(k)) return townBanDB[k]; } return {ban:false,unknown:false,note:`${city} - No known ban`}; }
+function selectVehicle(t){ vehicleType=t; document.querySelectorAll('.vehicleCard').forEach(c=>c.classList.remove('active')); document.querySelector(`[data-vehicle="${t}"]`).classList.add('active'); let pw=document.getElementById('payWall'), sb=document.getElementById('startBtn'); if(paidTiers[t]||localStorage.getItem('mm_trial_'+t)){ pw.style.display='none'; sb.style.display='block'; } else { pw.style.display='block'; sb.style.display='none'; } }
+function goPay(m){ let links=m==='paypal'?PAYPAL_LINKS:STRIPE_LINKS; let link=links[vehicleType]; if(link.includes('YOUR_')){ if(confirm(`TJ - Add your ${m} link for ${vehicleType}. Unlock for testing now? OK = unlock`)){ paidTiers[vehicleType]=true; localStorage.setItem('mm_paid',JSON.stringify(paidTiers)); document.getElementById('payWall').style.display='none'; document.getElementById('startBtn').style.display='block'; } return; } window.open(link,'_blank'); }
+
+// New: requestTrial integrates with backend registerTrial endpoint
+async function requestTrial(){
+  try{
+    document.getElementById('trialBtn').disabled = true;
+    document.getElementById('trialBtn').textContent = 'Starting trial...';
+    const productId = PRODUCT_ID_MAP[vehicleType] || PRODUCT_ID_MAP['car'];
+    const resp = await fetch(REGISTER_TRIAL_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ packageName: PACKAGE_NAME, productId })
+    });
+    const j = await resp.json();
+    if(resp.ok && j.ok){
+      // store entitlement and unlock
+      localStorage.setItem('mm_entitlement', j.token);
+      let pt = JSON.parse(localStorage.getItem('mm_paid')||'{}');
+      pt[vehicleType]=true; localStorage.setItem('mm_paid', JSON.stringify(pt));
+      document.getElementById('payWall').style.display='none';
+      document.getElementById('startBtn').style.display='block';
+      alert('Trial started — enjoy your first trip free');
+    } else if(resp.status===403 || j.error==='trial_already_used'){
+      alert('Trial already used from this network. Please purchase to continue.');
+    } else {
+      console.error('trial error', j);
+      alert('Could not start trial — try again later');
+    }
+  }catch(e){ console.error('trial exception',e); alert('Network error — try again'); }
+  finally{ document.getElementById('trialBtn').disabled = false; document.getElementById('trialBtn').textContent = 'START FIRST TRIP FREE →'; }
+}
+
+function startFreeTrial(){
+  // call server to register trial
+  requestTrial();
+}
+
+function clearMarkers(){ markers.forEach(m=>map.removeLayer(m)); markers=[]; }
+function toggleTolls(){ avoidTolls=!avoidTolls; localStorage.setItem('mm_avoid_tolls',avoidTolls); updateTollUI(); if(routeLines.length>0) startTrip(); }
+function updateTollUI(){ let btn=document.getElementById('tollBtn'); if(avoidTolls){ btn.textContent='🚫 AVOID ON'; btn.className='btn btn-toll active'; document.getElementById('vehicleInfo').textContent='🚫 Avoiding Tolls'; } else { btn.textContent='💰 TOLLS'; btn.className='btn btn-toll'; document.getElementById('vehicleInfo').textContent='💰 Tolls Allowed'; } }
+function showAlert(type,text,dist){ let b=document.getElementById('alertBar'); b.style.display='flex'; b.className=type; document.getElementById('alertText').textContent=text; document.getElementById('alertDist').textContent=dist||''; setTimeout(()=>b.style.display='none',8000); }
+async function findTollRoads(){ let c=map.getCenter(); document.getElementById('tollList').innerHTML='Finding tolls 15 mi...'; try{ let q=`[out:json][timeout:12];(way["toll"="yes"](around:25000,${c.lat},${c.lng}););out center 40;`; let d=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`).then(r=>r.json()); clearMarkers(); if(!d.elements||d.elements.length===0){ document.getElementById('tollList').innerHTML='✅ No tolls within 15 mi - TN has NO tolls - Nearest: WV Turnpike 200mi'; showAlert('toll-avoid','✅ NO TOLLS NEAR YOU','TN - No Tolls'); } else { let costs={car:4.5,rv:9,pickup_trailer:9,eighteen:25}; let cost=costs[vehicleType]||4.5; document.getElementById('tollList').innerHTML=`⚠️ Found ${d.elements.length} toll segments - Est ${vehicleType}: $${cost} each`; } }catch(e){ document.getElementById('tollList').innerHTML='Toll check offline'; } }
+async function findFuelLive(){ let c=map.getCenter(); document.getElementById('fuelList').innerHTML='Finding fuel...'; try{ let q=`[out:json][timeout:12];(node["amenity"="fuel"](around:16000,${c.lat},${c.lng}););out center 35;`; let d=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`).then(r=>r.json()); clearMarkers(); let html=''; d.elements?.slice(0,8).forEach(el=>{ let la=el.lat||el.center?.lat, lo=el.lon||el.center?.lon; if(!la) return; let name=el.tags?.name||'Fuel'; html+=`<div class="card"><div><b>${name}</b></div><div>⛽</div></div>`; let m=L.marker([la,lo],{icon:L.divIcon({html:`<div style="background:#4ade80;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff">⛽</div>`,iconSize:[36,36],className:''})}).addTo(map); markers.push(m); }); document.getElementById('fuelList').innerHTML=html||'No fuel found'; }catch(e){} }
+async function findWalmartOvernight(){ let c=map.getCenter(); document.getElementById('walmartList').innerHTML='Finding Walmarts...'; try{ let q=`[out:json][timeout:14];(node["shop"="supermarket"]["name"~"Walmart",i](around:30000,${c.lat},${c.lng}););out center 50;`; let data=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`).then(r=>r.json()); clearMarkers(); let walmarts=[]; if(data.elements){ for(let el of data.elements.slice(0,8)){ let la=el.lat||el.center?.lat, lo=el.lon||el.center?.lon; if(!la) continue; let city='Sevierville'; try{ let rev=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${la}&lon=${lo}&zoom=14`).then(r=>r.json()); city=rev.address?.city||rev.address?.town||'Unknown'; }catch(e){} let town=checkTownBan(city); walmarts.push({la,lo,name:el.tags?.name||'Walmart',city,status:town.ban?'ban':'allow',town}); } } if(walmarts.length===0){ walmarts=[{la:35.865,lo:-83.561,name:'Walmart',city:'Sevierville',status:'allow',town:{ban:false,note:'ALLOWS'}},{la:35.831,lo:-83.564,name:'Walmart',city:'Pigeon Forge',status:'ban',town:{ban:true,note:'BANS'}}]; } let html=''; walmarts.forEach(w=>{ let color=w.status==='allow'?'#4ade80':'#ef4444'; let m=L.marker([w.la,w.lo],{icon:L.divIcon({html:`<div style="background:${color};width:46px;height:36px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid #fff"><span>🅿️</span><span style="font-size:7px;font-weight:900">${w.status==='allow'?'ALLOW':'BAN'}</span></div>`,iconSize:[46,36],className:''})}).addTo(map); markers.push(m); html+=`<div class="card" style="border-left:4px solid ${color}"><div><b>${w.name}</b> - ${w.city}<br><span style="font-size:10px">${w.town.note}</span></div><div style="background:${color};color:#fff;padding:4px 8px;border-radius:99px;font-size:9px;font-weight:900">${w.status==='allow'?'ALLOW':'BAN'}</div></div>`; }); document.getElementById('walmartList').innerHTML=html; }catch(e){} }
+async function findCampgrounds(){ let c=map.getCenter(); document.getElementById('campList').innerHTML='Finding KOA / Camp...'; try{ let q=`[out:json][timeout:12];(node["tourism"="camp_site"](around:20000,${c.lat},${c.lng}););out center 40;`; let data=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`).then(r=>r.json()); clearMarkers(); let html=''; data.elements?.slice(0,10).forEach(el=>{ let la=el.lat||el.center?.lat, lo=el.lon||el.center?.lon; if(!la) return; let name=el.tags?.name||'Campground'; html+=`<div class="card"><div><b>${name}</b></div><div>🏕️</div></div>`; let m=L.marker([la,lo],{icon:L.divIcon({html:`<div style="background:#f97316;width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid #fff">🏕️</div>`,iconSize:[38,38],className:''})}).addTo(map); markers.push(m); }); document.getElementById('campList').innerHTML=html||'No campgrounds'; }catch(e){} }
+async function findParks(){ let c=map.getCenter(); document.getElementById('campList').innerHTML='Finding parks...'; try{ let q=`[out:json][timeout:12];(node["tourism"="theme_park"](around:20000,${c.lat},${c.lng});node["leisure"="park"](around:15000,${c.lat},${c.lng}););out center 40;`; let data=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`).then(r=>r.json()); clearMarkers(); let html=''; data.elements?.slice(0,10).forEach(el=>{ let la=el.lat||el.center?.lat, lo=el.lon||el.center?.lon; if(!la) return; let name=el.tags?.name||'Park'; html+=`<div class="card"><div><b>${name}</b></div><div>🏞️</div></div>`; let m=L.marker([la,lo],{icon:L.divIcon({html:`<div style="background:#a78bfa;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff">🏞️</div>`,iconSize:[40,40],className:''})}).addTo(map); markers.push(m); }); document.getElementById('campList').innerHTML=html||'No parks'; }catch(e){} }
+async function geocode(q){let r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`);let j=await r.json();return j[0]?[+j[0].lat,+j[0].lon]:null;}
+async function startTrip(){ let from=document.getElementById('from').value||'Sevierville TN'; let to=document.getElementById('to').value||'Pigeon Forge TN'; let a=await geocode(from); let b=await geocode(to); if(!a||!b){alert("Can't find");return} routeLines.forEach(l=>map.removeLayer(l)); routeLines=[]; document.getElementById('routeBar').style.display='flex'; document.getElementById('routeBar').innerHTML='Calculating...'; let url=`https://router.project-osrm.org/route/v1/driving/${a[1]},${a[0]};${b[1]},${b[0]}?overview=full&geometries=geojson&alternatives=true`; try{ let d=await (await fetch(url)).json(); if(!d.routes) return; document.getElementById('routeBar').innerHTML=''; d.routes.forEach((route,idx)=>{ let coords=route.geometry.coordinates.map(c=>[c[1],c[0]]); let line=L.polyline(coords,{color:idx===0?"#facc15":"#60a5fa",weight:idx===0?8:5}).addTo(map); routeLines.push(line); let miles=(route.distance/1609).toFixed(1); let mins=Math.round(route.duration/60); let tollText=avoidTolls? '🚫 Tolls Avoided' : `💰 Est $${(vehicleType==='eighteen'?25:vehicleType==='rv'?9:4.5).toFixed(2)}`; let div=document.createElement('div'); div.className='routeOpt'+(idx===0?' active':''); div.innerHTML=`${miles} mi • ${mins} min • ${tollText}`; div.onclick=()=>{ document.querySelectorAll('.routeOpt').forEach(o=>o.classList.remove('active')); div.classList.add('active'); }; document.getElementById('routeBar').appendChild(div); }); map.fitBounds(routeLines[0].getBounds(),{padding:[30,30]}); }catch(e){} }
+function openPanel(){document.getElementById('panel').style.display='block';} function closePanel(){document.getElementById('panel').style.display='none'}
+function startApp(){ localStorage.setItem('mm_vehicle',vehicleType); document.getElementById('splash').style.display='none'; updateTollUI(); }
+selectVehicle(vehicleType); updateTollUI();
+
+// Handle entitlement delivered by native wrapper after Play Billing
+const ENT = new URLSearchParams(window.location.search).get('ent');
+if (ENT) {
+  // store token (server should sign/validate tokens); for demo we unlock tiers
+  localStorage.setItem('mm_entitlement', ENT);
+  let pt = JSON.parse(localStorage.getItem('mm_paid')||'{}');
+  pt['eighteen']=pt['rv']=pt['car']=true;
+  localStorage.setItem('mm_paid', JSON.stringify(pt));
+  document.getElementById('payWall').style.display='none';
+  document.getElementById('startBtn').style.display='block';
+}
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js').then(() => {
+    console.log('Service worker registered');
+  }).catch(err => console.warn('SW register failed', err));
+}
+</script>
+</body>
+</html>

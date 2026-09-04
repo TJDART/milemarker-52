@@ -1,0 +1,50 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Privacy Policy — MileMarker 52</title><style>body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#fff;color:#111;padding:20px;max-width:800px;margin:0 auto}h1{color:#facc15}a{color:#2563eb}</style></head><body>
+<h1>Privacy Policy — MileMarker 52</h1>
+<p>Last updated: 2026-09-04</p>
+<p>Overview<br>MileMarker 52 ("we", "our", "the App") helps drivers find fuel, campgrounds, Walmart overnight parking status, and route toll information. This Privacy Policy explains what information we collect, how we use it, and your choices.</p>
+
+<h3>Information we collect</h3>
+<ul>
+<li><strong>Location data</strong>: only if you grant location permission to find nearby fuel/parks and to calculate routes. Location is not collected or stored unless you explicitly use a "share" feature.</li>
+<li><strong>Device information</strong>: app version, OS version, and anonymous usage metrics for crash and performance reporting.</li>
+<li><strong>Purchase data</strong>: purchases are handled through Google Play. We may receive an anonymized purchase token to verify entitlement; we do not store credit card information.</li>
+<li><strong>Network information (IP address) — TRIAL ENFORCEMENT</strong>: To limit the free "first trip" trial to one use per network, we temporarily read the client's public IP address when you request a trial. We do NOT store raw IP addresses. Instead we immediately transform the public IP using a server-side HMAC (SHA‑256) with a secret key and store only the HMAC value in our database to detect repeated trials from the same network.
+</li>
+</ul>
+
+<h3>How we use information</h3>
+<ul>
+<li>To show nearby fuel, campsites and to compute routes.</li>
+<li>To verify purchases and unlock premium features — verification is performed server‑side with the Google Play Developer API.</li>
+<li>To enforce the one‑time free trial: we use the HMAC of your public IP to detect repeated trial attempts from the same network. If a match exists, we prevent a second trial and prompt you to purchase. We do not use or retain the raw IP address.</li>
+<li>To monitor crashes and improve the app (Crashlytics or similar).</li>
+</ul>
+
+<h3>Data retention and security</h3>
+<ul>
+<li>HMAC'ed IP records used to enforce trials are kept only as long as necessary to detect repeat trials and may be removed or rotated periodically. They cannot be converted back to the raw IP without the server secret.</li>
+<li>Purchase verification tokens and entitlement data are stored only as needed to verify and manage access.</li>
+<li>We use standard security measures to protect data in transit and at rest. Do NOT share your service account credentials or private keys publicly.</li>
+</ul>
+
+<h3>Third parties</h3>
+<ul>
+<li>Google Play Billing for in‑app purchases and subscription management.</li>
+<li>Firebase Cloud Functions / Firestore for backend purchase verification and trial enforcement (you control the project and keys).</li>
+<li>OpenStreetMap / Overpass / Nominatim for map and POI data (subject to their usage policies).</li>
+<li>Map tiles from third‑party tile providers.</li>
+</ul>
+
+<p>We do not sell your personal data.</p>
+
+<h3>Your choices</h3>
+<ul>
+<li>You may decline location permission — core routing features that require your location will not work without it.</li>
+<li>If you are concerned about trial enforcement due to shared networks (e.g., workplace, public Wi‑Fi, or mobile carrier NAT), please contact us at the address below to discuss options.</li>
+</ul>
+
+<h3>Contact</h3>
+<p>For privacy questions, contact: <a href="mailto:TJDART72@yahoo.com">TJDART72@yahoo.com</a></p>
+
+</body></html>

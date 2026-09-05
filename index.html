@@ -28,6 +28,8 @@ input{flex:1;min-width:60px;padding:9px;border-radius:11px;border:1px solid #222
 .vehicleCard.active{border-color:#facc15;background:#1a1a00;box-shadow:0 0 15px rgba(250,204,21,0.3)}
 #panel{position:fixed;bottom:0;left:0;right:0;background:#0f1115;border-top:3px solid #facc15;border-radius:20px 20px 0 0;z-index:600;max-height:92vh;overflow:auto;display:none;padding:14px}
 .card{background:#000;border:1px solid #222;border-radius:12px;padding:10px;margin:6px 0;display:flex;justify-content:space-between;align-items:center}
+.small-muted{font-size:11px;color:#bbb}
+.log-enable{background:#111;border:1px solid #333;padding:6px 10px;border-radius:8px}
 </style>
 </head>
 <body>
@@ -72,12 +74,95 @@ input{flex:1;min-width:60px;padding:9px;border-radius:11px;border:1px solid #222
 <div id="map"></div>
 
 <div id="panel">
-<div style="display:flex;justify-content:space-between"><h3>MileMarker 52 v32 - All Features</h3><button class="btn btn-pill" onclick="closePanel()">✕</button></div>
+<div style="display:flex;justify-content:space-between;align-items:center"><h3>MileMarker 52 v32 - All Features</h3><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-pill" onclick="closePanel()">✕</button><button id="logsToggleBtn" class="log-enable" onclick="toggleLogsForVehicle()">Logs: Off</button></div></div>
 <div style="text-align:center;padding:10px;background:#111;border-radius:10px;margin:10px 0;border:1px solid #facc15">🦋 MileMarker 52 🦋<br><span style="font-size:11px">TJ Collins • Sevierville TN 37862<br>✅ FIRST TRIP FREE - No Card<br>Car $4.99 one-time • RV $6.99/mo • Trucker $9.99/mo<br>✅ Tolls Avoid + Cost • Live Fuel • Walmart Town Ban • KOA • Parks • Low Bridges • Weigh • Rest Areas • Stripe + PayPal</span></div>
 <div id="tollList" style="background:#000;padding:8px;border-radius:8px;max-height:120px;overflow:auto">Tolls: Tap FIND TOLLS</div>
 <div id="fuelList" style="background:#000;padding:8px;border-radius:8px;max-height:80px;overflow:auto;margin-top:6px">Fuel: Tap ⛽ FUEL</div>
 <div id="walmartList" style="background:#000;padding:8px;border-radius:8px;max-height:120px;overflow:auto;margin-top:6px">Walmart: Tap 🅿️ WALMART - Shows Sevierville ALLOW vs Pigeon Forge BAN</div>
 <div id="campList" style="background:#000;padding:8px;border-radius:8px;max-height:100px;overflow:auto;margin-top:6px">Camp/Parks: Tap 🏕️ KOA or 🏞️ FUN</div>
+
+<!-- Trucker log section -->
+<div id="truckerLogSection" style="display:none;background:#000;padding:10px;border-radius:8px;margin-top:8px">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <strong>Trucker Log</strong>
+    <div>
+      <button class="btn btn-pill" onclick="exportLogsCSV('eighteen')">Export CSV</button>
+      <button class="btn btn-pill" id="syncLogsBtn_eighteen" onclick="syncLogs('eighteen')" style="display:none">Sync</button>
+    </div>
+  </div>
+  <div style="margin-top:8px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px">
+    <input id="logDate_eighteen" type="date" />
+    <input id="logTime_eighteen" type="time" />
+    <input id="logStartHours_eighteen" placeholder="Start HOS (e.g. 08:00)" />
+    <input id="logEndHours_eighteen" placeholder="End HOS (e.g. 17:30)" />
+    <input id="logMiles_eighteen" type="number" placeholder="Miles" />
+    <input id="logFuelGallons_eighteen" type="number" placeholder="Fuel gal" step="0.1" />
+    <input id="logFuelCost_eighteen" type="number" placeholder="Fuel $ total" step="0.01" />
+    <input id="logTolls_eighteen" type="number" placeholder="Tolls $ total" step="0.01" />
+  </div>
+  <textarea id="logNotes_eighteen" placeholder="Notes" style="width:100%;margin-top:6px;border-radius:8px;padding:6px"></textarea>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="btn-go" onclick="addLog('eighteen')">Add Log</button>
+    <button class="btn btn-pill" onclick="clearLogs('eighteen')">Clear All</button>
+  </div>
+  <div id="logSummary_eighteen" style="margin-top:10px;font-size:13px"></div>
+  <div id="logList_eighteen" style="margin-top:10px;max-height:180px;overflow:auto"></div>
+</div>
+
+<!-- Car log section -->
+<div id="carLogSection" style="display:none;background:#000;padding:10px;border-radius:8px;margin-top:8px">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <strong>Car Log</strong>
+    <div>
+      <button class="btn btn-pill" onclick="exportLogsCSV('car')">Export CSV</button>
+    </div>
+  </div>
+  <div style="margin-top:8px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px">
+    <input id="logDate_car" type="date" />
+    <input id="logTime_car" type="time" />
+    <input id="logStartHours_car" placeholder="Start" />
+    <input id="logEndHours_car" placeholder="End" />
+    <input id="logMiles_car" type="number" placeholder="Miles" />
+    <input id="logFuelGallons_car" type="number" placeholder="Fuel gal" step="0.1" />
+    <input id="logFuelCost_car" type="number" placeholder="Fuel $ total" step="0.01" />
+    <input id="logTolls_car" type="number" placeholder="Tolls $ total" step="0.01" />
+  </div>
+  <textarea id="logNotes_car" placeholder="Notes" style="width:100%;margin-top:6px;border-radius:8px;padding:6px"></textarea>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="btn-go" onclick="addLog('car')">Add Log</button>
+    <button class="btn btn-pill" onclick="clearLogs('car')">Clear All</button>
+  </div>
+  <div id="logSummary_car" style="margin-top:10px;font-size:13px"></div>
+  <div id="logList_car" style="margin-top:10px;max-height:180px;overflow:auto"></div>
+</div>
+
+<!-- RV log section -->
+<div id="rvLogSection" style="display:none;background:#000;padding:10px;border-radius:8px;margin-top:8px">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <strong>RV Log</strong>
+    <div>
+      <button class="btn btn-pill" onclick="exportLogsCSV('rv')">Export CSV</button>
+    </div>
+  </div>
+  <div style="margin-top:8px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px">
+    <input id="logDate_rv" type="date" />
+    <input id="logTime_rv" type="time" />
+    <input id="logStartHours_rv" placeholder="Start" />
+    <input id="logEndHours_rv" placeholder="End" />
+    <input id="logMiles_rv" type="number" placeholder="Miles" />
+    <input id="logFuelGallons_rv" type="number" placeholder="Fuel gal" step="0.1" />
+    <input id="logFuelCost_rv" type="number" placeholder="Fuel $ total" step="0.01" />
+    <input id="logTolls_rv" type="number" placeholder="Tolls $ total" step="0.01" />
+  </div>
+  <textarea id="logNotes_rv" placeholder="Notes" style="width:100%;margin-top:6px;border-radius:8px;padding:6px"></textarea>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="btn-go" onclick="addLog('rv')">Add Log</button>
+    <button class="btn btn-pill" onclick="clearLogs('rv')">Clear All</button>
+  </div>
+  <div id="logSummary_rv" style="margin-top:10px;font-size:13px"></div>
+  <div id="logList_rv" style="margin-top:10px;max-height:180px;overflow:auto"></div>
+</div>
+
 </div>
 
 <script>
@@ -94,7 +179,43 @@ let routeLines=[], markers=[], vehicleType=localStorage.getItem('mm_vehicle')||'
 let paidTiers=JSON.parse(localStorage.getItem('mm_paid')||'{}');
 const townBanDB={'pigeon forge':{ban:true,note:'Pigeon Forge BANS - Use campground'},'gatlinburg':{ban:true,note:'Gatlinburg BANS'},'myrtle beach':{ban:true,note:'Myrtle Beach BANS'},'sevierville':{ban:false,note:'Sevierville ALLOWS - Call manager'}};
 function checkTownBan(city){ if(!city) return {ban:false,unknown:true,note:'Unknown'}; let cl=city.toLowerCase(); for(let k in townBanDB){ if(cl.includes(k)) return townBanDB[k]; } return {ban:false,unknown:false,note:`${city} - No known ban`}; }
-function selectVehicle(t){ vehicleType=t; document.querySelectorAll('.vehicleCard').forEach(c=>c.classList.remove('active')); document.querySelector(`[data-vehicle="${t}"]`).classList.add('active'); let pw=document.getElementById('payWall'), sb=document.getElementById('startBtn'); if(paidTiers[t]||localStorage.getItem('mm_trial_'+t)){ pw.style.display='none'; sb.style.display='block'; } else { pw.style.display='block'; sb.style.display='none'; } }
+
+// Log storage helpers
+function getLogKey(vehicle){ return `mm_${vehicle}_logs`; }
+function loadLogs(vehicle){ try{ return JSON.parse(localStorage.getItem(getLogKey(vehicle))||'[]'); }catch(e){ return []; } }
+function saveLogs(vehicle,arr){ localStorage.setItem(getLogKey(vehicle), JSON.stringify(arr)); }
+
+function renderLogs(vehicle){ const arr = loadLogs(vehicle); const list = document.getElementById(`logList_${vehicle}`); const summary = document.getElementById(`logSummary_${vehicle}`); if(!list) return; list.innerHTML=''; let totalHours=0, totalMiles=0, totalFuel=0, totalFuelCost=0, totalTolls=0; arr.forEach(e=>{ totalHours += Number(e.hours||0); totalMiles += Number(e.miles||0); totalFuel += Number(e.fuelGallons||0); totalFuelCost += Number(e.fuelCost||0); totalTolls += Number(e.tolls||0); const el = document.createElement('div'); el.className='card'; el.style.display='flex'; el.style.justifyContent='space-between'; el.style.alignItems='center'; el.innerHTML = `<div><b>${e.date} ${e.time}</b><div style="font-size:12px">Hrs: ${Number(e.hours).toFixed(2)} • Miles: ${e.miles} • Fuel: ${e.fuelGallons} gal ($${e.fuelCost.toFixed(2)}) • Tolls: $${e.tolls.toFixed(2)}</div><div style="font-size:12px;color:#aaa">${e.notes||''}</div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="btn btn-pill" onclick="editLog('${vehicle}','${e.id}')">Edit</button><button class="btn btn-pill" onclick="deleteLog('${vehicle}','${e.id}')">Delete</button></div>`; list.appendChild(el); }); if(summary) summary.innerHTML = `Totals — Hours: ${totalHours.toFixed(2)} • Miles: ${totalMiles.toFixed(1)} • Fuel: ${totalFuel.toFixed(1)} gal ($${totalFuelCost.toFixed(2)}) • Tolls: $${totalTolls.toFixed(2)}`; }
+
+function parseHours(h){ if(!h) return 0; const [hh,mm]=h.split(':').map(Number); return (hh||0)*60 + (mm||0); }
+
+function addLog(vehicle){ const date = document.getElementById(`logDate_${vehicle}`).value || new Date().toISOString().slice(0,10); const time = document.getElementById(`logTime_${vehicle}`).value || new Date().toTimeString().slice(0,5); const start = document.getElementById(`logStartHours_${vehicle}`).value; const end = document.getElementById(`logEndHours_${vehicle}`).value; const startMin = parseHours(start); const endMin = parseHours(end); let hours=0; if(start && end){ hours = ((endMin - startMin)/60); if(hours<0) hours=0; } const miles = parseFloat(document.getElementById(`logMiles_${vehicle}`).value) || 0; const fuelGallons = parseFloat(document.getElementById(`logFuelGallons_${vehicle}`).value) || 0; const fuelCost = parseFloat(document.getElementById(`logFuelCost_${vehicle}`).value) || 0; const tolls = parseFloat(document.getElementById(`logTolls_${vehicle}`).value) || 0; const notes = document.getElementById(`logNotes_${vehicle}`).value || ''; const entry = { id: 'log_'+Date.now(), createdAt: Date.now(), date, time, start, end, hours, miles, fuelGallons, fuelCost, tolls, notes }; const arr = loadLogs(vehicle); arr.unshift(entry); saveLogs(vehicle,arr); renderLogs(vehicle); // clear inputs
+  document.getElementById(`logStartHours_${vehicle}`).value=''; document.getElementById(`logEndHours_${vehicle}`).value=''; document.getElementById(`logMiles_${vehicle}`).value=''; document.getElementById(`logFuelGallons_${vehicle}`).value=''; document.getElementById(`logFuelCost_${vehicle}`).value=''; document.getElementById(`logTolls_${vehicle}`).value=''; document.getElementById(`logNotes_${vehicle}`).value=''; }
+
+function deleteLog(vehicle,id){ let arr = loadLogs(vehicle); arr = arr.filter(x=>x.id!==id); saveLogs(vehicle,arr); renderLogs(vehicle); }
+
+function editLog(vehicle,id){ const arr = loadLogs(vehicle); const e = arr.find(x=>x.id===id); if(!e) return; document.getElementById(`logDate_${vehicle}`).value = e.date; document.getElementById(`logTime_${vehicle}`).value = e.time; document.getElementById(`logStartHours_${vehicle}`).value = e.start || ''; document.getElementById(`logEndHours_${vehicle}`).value = e.end || ''; document.getElementById(`logMiles_${vehicle}`).value = e.miles; document.getElementById(`logFuelGallons_${vehicle}`).value = e.fuelGallons; document.getElementById(`logFuelCost_${vehicle}`).value = e.fuelCost; document.getElementById(`logTolls_${vehicle}`).value = e.tolls; document.getElementById(`logNotes_${vehicle}`).value = e.notes; deleteLog(vehicle,id); }
+
+function clearLogs(vehicle){ if(!confirm('Clear all logs for this vehicle? This cannot be undone.')) return; localStorage.removeItem(getLogKey(vehicle)); renderLogs(vehicle); }
+
+function exportLogsCSV(vehicle){ const arr = loadLogs(vehicle); if(arr.length===0){ alert('No logs to export'); return; } const header = ['id','createdAt','date','time','start','end','hours','miles','fuelGallons','fuelCost','tolls','notes']; const rows = arr.map(e=> header.map(h=>`"${String(e[h]??'').replace(/"/g,'""')}"`).join(',')); const csv = [header.join(','), ...rows].join('\n'); const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`milemarker52_${vehicle}_logs.csv`; a.click(); URL.revokeObjectURL(url); }
+
+async function syncLogs(vehicle){ const arr = loadLogs(vehicle); if(arr.length===0){ alert('No logs to sync'); return; } const btn = document.getElementById(`syncLogsBtn_${vehicle}`); if(btn){ btn.disabled=true; btn.textContent='Syncing...'; } try{ const SAVE_LOGS_URL = 'https://us-central1-YOUR_PROJECT.cloudfunctions.net/saveTruckerLogs'; const resp = await fetch(SAVE_LOGS_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ vehicle, logs: arr }) }); if(resp.ok){ alert('Synced logs'); } else { alert('Sync failed'); console.error(await resp.text()); } }catch(e){ console.error('sync error', e); alert('Sync error'); } finally{ if(btn){ btn.disabled=false; btn.textContent='Sync'; } } }
+
+// Logging UI toggles
+function isLogsEnabled(vehicle){ return localStorage.getItem(`mm_logs_enabled_${vehicle}`) === 'true'; }
+function setLogsEnabled(vehicle,val){ localStorage.setItem(`mm_logs_enabled_${vehicle}`, val ? 'true' : 'false'); }
+function toggleLogsForVehicle(){ const v = vehicleType; const currently = isLogsEnabled(v); setLogsEnabled(v, !currently); updateLogsUI(); }
+function updateLogsUI(){ const v = vehicleType; const toggleBtn = document.getElementById('logsToggleBtn'); if(!toggleBtn) return; const enabled = isLogsEnabled(v); toggleBtn.textContent = enabled ? 'Logs: On' : 'Logs: Off'; // show/hide sections
+  document.getElementById('truckerLogSection').style.display = (v==='eighteen' && enabled) ? 'block' : 'none';
+  document.getElementById('carLogSection').style.display = (v==='car' && enabled) ? 'block' : 'none';
+  document.getElementById('rvLogSection').style.display = (v==='rv' && enabled) ? 'block' : 'none';
+  // render active one
+  if(enabled) renderLogs(v);
+}
+
+function selectVehicle(t){ vehicleType=t; document.querySelectorAll('.vehicleCard').forEach(c=>c.classList.remove('active')); document.querySelector(`[data-vehicle="${t}"]`).classList.add('active'); let pw=document.getElementById('payWall'), sb=document.getElementById('startBtn'); if(paidTiers[t]||localStorage.getItem('mm_trial_'+t)){ pw.style.display='none'; sb.style.display='block'; } else { pw.style.display='block'; sb.style.display='none'; } updateLogsUI(); }
+
 function goPay(m){ let links=m==='paypal'?PAYPAL_LINKS:STRIPE_LINKS; let link=links[vehicleType]; if(link.includes('YOUR_')){ if(confirm(`TJ - Add your ${m} link for ${vehicleType}. Unlock for testing now? OK = unlock`)){ paidTiers[vehicleType]=true; localStorage.setItem('mm_paid',JSON.stringify(paidTiers)); document.getElementById('payWall').style.display='none'; document.getElementById('startBtn').style.display='block'; } return; } window.open(link,'_blank'); }
 
 // New: requestTrial integrates with backend registerTrial endpoint
@@ -118,7 +239,8 @@ async function requestTrial(){
       document.getElementById('startBtn').style.display='block';
       alert('Trial started — enjoy your first trip free');
     } else if(resp.status===403 || j.error==='trial_already_used'){
-      alert('Trial already used from this network. Please purchase to continue.');
+      // nicer in-UI message with contact link
+      showTrialBlockedUI();
     } else {
       console.error('trial error', j);
       alert('Could not start trial — try again later');
@@ -127,10 +249,20 @@ async function requestTrial(){
   finally{ document.getElementById('trialBtn').disabled = false; document.getElementById('trialBtn').textContent = 'START FIRST TRIP FREE →'; }
 }
 
-function startFreeTrial(){
-  // call server to register trial
-  requestTrial();
+function showTrialBlockedUI(){ // present a friendly card in the panel area
+  const panel = document.getElementById('panel');
+  // create or update a message element
+  let msg = document.getElementById('trialBlockedMsg');
+  if(!msg){
+    msg = document.createElement('div'); msg.id='trialBlockedMsg'; msg.style.background='#111'; msg.style.border='2px solid #332'; msg.style.padding='10px'; msg.style.borderRadius='8px'; msg.style.marginTop='10px'; msg.innerHTML = `<div style="font-weight:800;color:#ef4444">Trial not available</div><div style="margin-top:6px">It looks like a trial has already been used from your network. If you believe this is a mistake (shared Wi‑Fi, mobile carrier NAT, or VPN), please <a href="mailto:TJDART72@yahoo.com" style="color:#facc15">contact us</a> with details and we'll help.</div><div style="margin-top:8px"><button class="btn-go" onclick="openPurchaseLink()">Purchase Now</button> <button class="btn btn-pill" onclick="dismissTrialBlocked()">Dismiss</button></div>`;
+    panel.insertBefore(msg, panel.firstChild.nextSibling.nextSibling); // after header cards
+  }
+  msg.style.display='block';
 }
+function dismissTrialBlocked(){ const msg = document.getElementById('trialBlockedMsg'); if(msg) msg.style.display='none'; }
+function openPurchaseLink(){ /* open Play billing or fallback to website */ alert('To purchase, use the in-app billing option in the Android app or visit the website.'); }
+
+function startFreeTrial(){ requestTrial(); }
 
 function clearMarkers(){ markers.forEach(m=>map.removeLayer(m)); markers=[]; }
 function toggleTolls(){ avoidTolls=!avoidTolls; localStorage.setItem('mm_avoid_tolls',avoidTolls); updateTollUI(); if(routeLines.length>0) startTrip(); }
@@ -144,13 +276,12 @@ async function findParks(){ let c=map.getCenter(); document.getElementById('camp
 async function geocode(q){let r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`);let j=await r.json();return j[0]?[+j[0].lat,+j[0].lon]:null;}
 async function startTrip(){ let from=document.getElementById('from').value||'Sevierville TN'; let to=document.getElementById('to').value||'Pigeon Forge TN'; let a=await geocode(from); let b=await geocode(to); if(!a||!b){alert("Can't find");return} routeLines.forEach(l=>map.removeLayer(l)); routeLines=[]; document.getElementById('routeBar').style.display='flex'; document.getElementById('routeBar').innerHTML='Calculating...'; let url=`https://router.project-osrm.org/route/v1/driving/${a[1]},${a[0]};${b[1]},${b[0]}?overview=full&geometries=geojson&alternatives=true`; try{ let d=await (await fetch(url)).json(); if(!d.routes) return; document.getElementById('routeBar').innerHTML=''; d.routes.forEach((route,idx)=>{ let coords=route.geometry.coordinates.map(c=>[c[1],c[0]]); let line=L.polyline(coords,{color:idx===0?"#facc15":"#60a5fa",weight:idx===0?8:5}).addTo(map); routeLines.push(line); let miles=(route.distance/1609).toFixed(1); let mins=Math.round(route.duration/60); let tollText=avoidTolls? '🚫 Tolls Avoided' : `💰 Est $${(vehicleType==='eighteen'?25:vehicleType==='rv'?9:4.5).toFixed(2)}`; let div=document.createElement('div'); div.className='routeOpt'+(idx===0?' active':''); div.innerHTML=`${miles} mi • ${mins} min • ${tollText}`; div.onclick=()=>{ document.querySelectorAll('.routeOpt').forEach(o=>o.classList.remove('active')); div.classList.add('active'); }; document.getElementById('routeBar').appendChild(div); }); map.fitBounds(routeLines[0].getBounds(),{padding:[30,30]}); }catch(e){} }
 function openPanel(){document.getElementById('panel').style.display='block';} function closePanel(){document.getElementById('panel').style.display='none'}
-function startApp(){ localStorage.setItem('mm_vehicle',vehicleType); document.getElementById('splash').style.display='none'; updateTollUI(); }
-selectVehicle(vehicleType); updateTollUI();
+function startApp(){ localStorage.setItem('mm_vehicle',vehicleType); document.getElementById('splash').style.display='none'; updateTollUI(); updateLogsUI(); }
+selectVehicle(vehicleType); updateTollUI(); updateLogsUI();
 
 // Handle entitlement delivered by native wrapper after Play Billing
 const ENT = new URLSearchParams(window.location.search).get('ent');
 if (ENT) {
-  // store token (server should sign/validate tokens); for demo we unlock tiers
   localStorage.setItem('mm_entitlement', ENT);
   let pt = JSON.parse(localStorage.getItem('mm_paid')||'{}');
   pt['eighteen']=pt['rv']=pt['car']=true;
